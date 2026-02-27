@@ -42,8 +42,12 @@ object AlertFunctions {
                 "MazerDev\\Dialogify\\Events\\ButtonPressed"
             }
 
+            // activity is captured strongly here; this is safe because the dialog's lifetime
+            // is bounded to the activity's lifetime. dispatchEvent() uses WeakReference internally.
             Handler(Looper.getMainLooper()).post {
                 try {
+                    var buttonPressed = false
+
                     val builder = AlertDialog.Builder(activity)
                         .setTitle(title)
                         .setCancelable(cancelable)
@@ -178,6 +182,7 @@ object AlertFunctions {
 
                     // Buttons
                     fun onButtonClick(btn: JSONObject, index: Int) {
+                        buttonPressed = true
                         val buttonId = btn.getString("id")
                         val buttonLabel = btn.getString("label")
 
@@ -219,6 +224,18 @@ object AlertFunctions {
                         }
                     }
 
+                    builder.setOnCancelListener {
+                        if (!buttonPressed) {
+                            val payload = JSONObject().apply {
+                                put("buttonId", "cancelled")
+                                put("label", "Cancelled")
+                                put("index", -1)
+                                if (id != null) put("dialogId", id)
+                            }
+                            dispatchEvent(activity, "MazerDev\\Dialogify\\Events\\ButtonPressed", payload.toString())
+                        }
+                    }
+
                     builder.show()
                 } catch (e: Exception) {
                     Log.e("Dialogify.Alert", "Error: ${e.message}", e)
@@ -228,6 +245,7 @@ object AlertFunctions {
             return emptyMap()
         }
 
+        @Suppress("UNCHECKED_CAST")
         private fun parseButton(param: Any?): JSONObject? {
             return when (param) {
                 is Map<*, *> -> JSONObject(param as Map<String, Any>)
@@ -236,6 +254,7 @@ object AlertFunctions {
             }
         }
 
+        @Suppress("UNCHECKED_CAST")
         private fun parseInputs(param: Any?): List<JSONObject> {
             val result = mutableListOf<JSONObject>()
             when (param) {
