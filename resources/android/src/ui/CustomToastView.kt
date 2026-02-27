@@ -33,9 +33,11 @@ class CustomToastView(
     private val onAction: (() -> Unit)? = null,
 ) {
     private var container: FrameLayout? = null
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private var dismissRunnable: Runnable? = null
 
     fun show() {
-        Handler(Looper.getMainLooper()).post {
+        mainHandler.post {
             val density = context.resources.displayMetrics.density
 
             // Container card
@@ -82,7 +84,7 @@ class CustomToastView(
             // Action button
             if (actionLabel != null) {
                 val actionView = TextView(context).apply {
-                    text = actionLabel.uppercase()
+                    text = actionLabel.uppercase(java.util.Locale.getDefault())
                     setTextColor(parseColor(actionColor, "#BB86FC"))
                     setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
                     isFocusable = true
@@ -132,11 +134,14 @@ class CustomToastView(
             }
 
             // Auto dismiss
-            Handler(Looper.getMainLooper()).postDelayed({ dismiss() }, durationMs)
+            dismissRunnable = Runnable { dismiss() }
+            mainHandler.postDelayed(dismissRunnable!!, durationMs)
         }
     }
 
     private fun dismiss() {
+        dismissRunnable?.let { mainHandler.removeCallbacks(it) }
+        dismissRunnable = null
         container?.let { view ->
             ObjectAnimator.ofFloat(view, "alpha", 1f, 0f).apply {
                 duration = 200
@@ -148,6 +153,8 @@ class CustomToastView(
                 start()
             }
             container = null
+            // container nulled before animation ends intentionally — prevents double-dismiss if
+            // dismiss() is called again during the 200 ms fade-out (e.g. by auto-dismiss runnable).
         }
     }
 

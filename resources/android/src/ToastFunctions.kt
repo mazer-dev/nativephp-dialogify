@@ -46,6 +46,7 @@ object ToastFunctions {
                 actionId = actionMap["id"] as? String
                 actionColor = actionMap["color"] as? String
             } else if (actionMap is JSONObject) {
+                // Note: optString(key, null) returns null when key is absent (unlike optString(key) which returns "")
                 actionLabel = actionMap.optString("label", null)
                 actionId = actionMap.optString("id", null)
                 actionColor = actionMap.optString("color", null)
@@ -95,6 +96,7 @@ object ToastFunctions {
         }
 
         private fun dispatchEvent(activity: FragmentActivity, event: String, payloadJson: String) {
+            val weakActivity = java.lang.ref.WeakReference(activity)
             val eventForJs = event.replace("\\", "\\\\")
             val js = """
                 (function () {
@@ -114,7 +116,8 @@ object ToastFunctions {
 
             Handler(Looper.getMainLooper()).post {
                 try {
-                    val webViewProvider = activity as? com.nativephp.mobile.bridge.WebViewProvider
+                    val act = weakActivity.get() ?: return@post
+                    val webViewProvider = act as? com.nativephp.mobile.bridge.WebViewProvider
                     webViewProvider?.getWebView()?.evaluateJavascript(js, null)
                 } catch (e: Exception) {
                     Log.e("Dialogify.Toast", "Event dispatch error: ${e.message}", e)
