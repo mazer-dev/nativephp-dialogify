@@ -99,7 +99,7 @@ class Input
         return $this;
     }
 
-    /** @return array<string, mixed> */
+    /** @return array{id: string, label: string, type: string, placeholder: ?string, defaultValue: mixed, required: bool, maxLength: ?int, options: array<string, string>|null, minDate: ?string, maxDate: ?string, minuteInterval: ?int} */
     public function toArray(): array
     {
         return [
