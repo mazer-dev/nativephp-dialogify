@@ -28,6 +28,7 @@ object ToastFunctions {
             val durationMs = when (val dur = parameters["duration"]) {
                 is String -> when (dur.lowercase()) {
                     "short" -> 2000L
+                    "long" -> 4000L
                     else -> 4000L
                 }
                 is Number -> dur.toLong()
@@ -70,10 +71,10 @@ object ToastFunctions {
                     cornerRadiusDp = cornerRadius,
                     actionLabel = actionLabel,
                     actionColor = actionColor,
-                    onAction = if (actionId != null && actionLabel != null) {
+                    onAction = if (actionLabel != null) {
                         {
                             val payload = JSONObject().apply {
-                                put("buttonId", actionId)
+                                put("buttonId", actionId ?: actionLabel)
                                 put("label", actionLabel)
                                 if (id != null) put("toastId", id)
                             }

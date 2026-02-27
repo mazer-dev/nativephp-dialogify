@@ -160,6 +160,9 @@ class CustomToastView(
             }
         }
 
+        // Icons are resolved from the app's drawable resources.
+        // The consuming app should include vector drawables named "ic_<name>" or "<name>".
+        // The Material icons dependency (declared in nativephp.json) provides base styling support.
         fun getIconResource(context: Context, name: String): Int {
             // Try Material icon by name
             return context.resources.getIdentifier(
