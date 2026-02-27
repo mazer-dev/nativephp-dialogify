@@ -15,11 +15,13 @@ class Dialogify
 
         foreach ($options as $key => $value) {
             match ($key) {
-                'position' => $toast->position(Position::from($value)),
+                'position' => $toast->position(
+                    Position::tryFrom($value) ?? throw new \InvalidArgumentException("Invalid position: '{$value}'. Valid values: top, bottom, center")
+                ),
                 'backgroundColor' => $toast->backgroundColor($value),
                 'textColor' => $toast->textColor($value),
                 'icon' => $toast->icon(is_string($value) ? (Icon::tryFrom($value) ?? $value) : $value),
-                'duration' => $toast->duration(is_int($value) ? $value : Duration::from($value)),
+                'duration' => $toast->duration(is_int($value) ? $value : (Duration::tryFrom($value) ?? throw new \InvalidArgumentException("Invalid duration: '{$value}'. Valid values: short, long"))),
                 'cornerRadius' => $toast->cornerRadius($value),
                 'id' => $toast->id($value),
                 default => null,
@@ -37,17 +39,26 @@ class Dialogify
             match ($key) {
                 'positive' => $alert->positive(
                     is_array($value)
-                        ? Button::make($value['id'], $value['label'])->style(ButtonStyle::from($value['style'] ?? 'neutral'))
+                        ? Button::make(
+                            $value['id'] ?? throw new \InvalidArgumentException("Button array must have an 'id' key"),
+                            $value['label'] ?? throw new \InvalidArgumentException("Button array must have a 'label' key"),
+                        )->style(ButtonStyle::tryFrom($value['style'] ?? 'neutral') ?? ButtonStyle::Neutral)
                         : $value
                 ),
                 'negative' => $alert->negative(
                     is_array($value)
-                        ? Button::make($value['id'], $value['label'])->style(ButtonStyle::from($value['style'] ?? 'neutral'))
+                        ? Button::make(
+                            $value['id'] ?? throw new \InvalidArgumentException("Button array must have an 'id' key"),
+                            $value['label'] ?? throw new \InvalidArgumentException("Button array must have a 'label' key"),
+                        )->style(ButtonStyle::tryFrom($value['style'] ?? 'neutral') ?? ButtonStyle::Neutral)
                         : $value
                 ),
                 'neutral' => $alert->neutral(
                     is_array($value)
-                        ? Button::make($value['id'], $value['label'])->style(ButtonStyle::from($value['style'] ?? 'neutral'))
+                        ? Button::make(
+                            $value['id'] ?? throw new \InvalidArgumentException("Button array must have an 'id' key"),
+                            $value['label'] ?? throw new \InvalidArgumentException("Button array must have a 'label' key"),
+                        )->style(ButtonStyle::tryFrom($value['style'] ?? 'neutral') ?? ButtonStyle::Neutral)
                         : $value
                 ),
                 'icon' => $alert->icon(is_string($value) ? (Icon::tryFrom($value) ?? $value) : $value),

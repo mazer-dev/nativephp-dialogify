@@ -3,6 +3,7 @@
 namespace MazerDev\Dialogify\Facades;
 
 use Illuminate\Support\Facades\Facade;
+use MazerDev\Dialogify\Dialogify as DialogifyCore;
 use MazerDev\Dialogify\PendingAlert;
 use MazerDev\Dialogify\PendingSheet;
 use MazerDev\Dialogify\PendingToast;
@@ -16,6 +17,6 @@ class Dialogify extends Facade
 {
     protected static function getFacadeAccessor(): string
     {
-        return \MazerDev\Dialogify\Dialogify::class;
+        return DialogifyCore::class;
     }
 }
