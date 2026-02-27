@@ -174,7 +174,9 @@ object AlertFunctions {
                                                         cal.set(dateParts[0].toInt(), dateParts[1].toInt() - 1, dateParts[2].toInt(),
                                                             timeParts[0].toInt(), timeParts[1].toInt(), 0)
                                                     }
-                                                } catch (e: Exception) { /* use current time */ }
+                                                } catch (e: Exception) {
+                                                    Log.w("Dialogify", "Could not parse existing datetime value for pre-population: ${e.message}")
+                                                }
                                             }
                                             val dateDialog = DatePickerDialog(activity, { _, y, m, d ->
                                                 TimePickerDialog(activity, { _, h, min ->
@@ -299,7 +301,7 @@ object AlertFunctions {
             return try {
                 val parts = dateStr.split("-")
                 if (parts.size != 3) return null
-                val cal = Calendar.getInstance()
+                val cal = Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC"))
                 cal.set(parts[0].toInt(), parts[1].toInt() - 1, parts[2].toInt(), 0, 0, 0)
                 cal.set(Calendar.MILLISECOND, 0)
                 cal.timeInMillis
