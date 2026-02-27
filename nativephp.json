@@ -1,0 +1,45 @@
+{
+    "namespace": "Dialogify",
+    "bridge_functions": [
+        {
+            "name": "Dialogify.Toast",
+            "android": "dev.mazer.dialogify.ToastFunctions.Show",
+            "ios": "ToastFunctions.Show",
+            "description": "Show a customizable toast notification"
+        },
+        {
+            "name": "Dialogify.Alert",
+            "android": "dev.mazer.dialogify.AlertFunctions.Show",
+            "ios": "AlertFunctions.Show",
+            "description": "Show a customizable alert dialog"
+        },
+        {
+            "name": "Dialogify.Sheet",
+            "android": "dev.mazer.dialogify.SheetFunctions.Show",
+            "ios": "SheetFunctions.Show",
+            "description": "Show a customizable bottom sheet"
+        }
+    ],
+    "android": {
+        "min_version": 24,
+        "permissions": [],
+        "dependencies": {
+            "implementation": [
+                "com.google.android.material:material:1.12.0"
+            ]
+        }
+    },
+    "ios": {
+        "min_version": "15.0",
+        "info_plist": {},
+        "dependencies": {
+            "swift_packages": [],
+            "pods": []
+        }
+    },
+    "events": [
+        "MazerDev\\Dialogify\\Events\\ButtonPressed",
+        "MazerDev\\Dialogify\\Events\\ToastAction",
+        "MazerDev\\Dialogify\\Events\\InputSubmitted"
+    ]
+}

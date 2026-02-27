@@ -1,0 +1,54 @@
+{
+    "name": "mazer-dev/nativephp-dialogify",
+    "description": "Highly customizable toast notifications, alert dialogs, and bottom sheets for NativePHP Mobile",
+    "type": "nativephp-plugin",
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "nativephp/mobile": "^3.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^10.0",
+        "pestphp/pest": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "MazerDev\\Dialogify\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "MazerDev\\Dialogify\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "MazerDev\\Dialogify\\Providers\\DialogifyServiceProvider"
+            ]
+        },
+        "nativephp": {
+            "manifest": "nativephp.json"
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../../vetzer-app/vendor/nativephp/mobile",
+            "options": {
+                "symlink": true,
+                "versions": {
+                    "nativephp/mobile": "3.0.x-dev"
+                }
+            }
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
