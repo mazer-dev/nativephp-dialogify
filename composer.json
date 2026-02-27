@@ -37,18 +37,6 @@
             "pestphp/pest-plugin": true
         }
     },
-    "repositories": [
-        {
-            "type": "path",
-            "url": "../../vetzer-app/vendor/nativephp/mobile",
-            "options": {
-                "symlink": true,
-                "versions": {
-                    "nativephp/mobile": "3.0.x-dev"
-                }
-            }
-        }
-    ],
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "prefer-stable": true
 }
