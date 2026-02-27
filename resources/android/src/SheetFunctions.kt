@@ -206,32 +206,80 @@ object SheetFunctions {
                         inputViews[inputId] = editText
                     }
                     "date" -> {
+                        val minDateStr = input.optString("minDate", null as String?)
+                        val maxDateStr = input.optString("maxDate", null as String?)
                         val btn = Button(requireContext()).apply {
                             text = (defaultValue as? String) ?: "Select date"
                             tag = defaultValue as? String
                             setOnClickListener {
                                 val cal = Calendar.getInstance()
-                                DatePickerDialog(requireContext(), { _, y, m, d ->
+                                val dialog = DatePickerDialog(requireContext(), { _, y, m, d ->
                                     val s = String.format(Locale.getDefault(), "%04d-%02d-%02d", y, m + 1, d)
                                     this.text = s
                                     this.tag = s
-                                }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
+                                }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH))
+                                minDateStr?.let { parseDate(it)?.let { ms -> dialog.datePicker.minDate = ms } }
+                                maxDateStr?.let { parseDate(it)?.let { ms -> dialog.datePicker.maxDate = ms } }
+                                dialog.show()
                             }
                         }
                         layout.addView(btn)
                         inputViews[inputId] = btn
                     }
                     "time" -> {
+                        val minuteInterval = input.optInt("minuteInterval", 0)
                         val btn = Button(requireContext()).apply {
                             text = (defaultValue as? String) ?: "Select time"
                             tag = defaultValue as? String
                             setOnClickListener {
                                 val cal = Calendar.getInstance()
                                 TimePickerDialog(requireContext(), { _, h, m ->
-                                    val s = String.format(Locale.getDefault(), "%02d:%02d", h, m)
+                                    val snappedMin = if (minuteInterval > 1) {
+                                        (Math.round(m.toFloat() / minuteInterval) * minuteInterval) % 60
+                                    } else m
+                                    val s = String.format(Locale.getDefault(), "%02d:%02d", h, snappedMin)
                                     this.text = s
                                     this.tag = s
                                 }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show()
+                            }
+                        }
+                        layout.addView(btn)
+                        inputViews[inputId] = btn
+                    }
+                    "datetime" -> {
+                        val minDateStr = input.optString("minDate", null as String?)
+                        val maxDateStr = input.optString("maxDate", null as String?)
+                        val minuteInterval = input.optInt("minuteInterval", 0)
+                        val btn = Button(requireContext()).apply {
+                            text = (defaultValue as? String) ?: "Select date & time"
+                            tag = defaultValue as? String
+                            setOnClickListener {
+                                val cal = Calendar.getInstance()
+                                val existing = this.tag as? String
+                                if (existing != null) {
+                                    try {
+                                        val parts = existing.split(" ")
+                                        if (parts.size == 2) {
+                                            val dateParts = parts[0].split("-")
+                                            val timeParts = parts[1].split(":")
+                                            cal.set(dateParts[0].toInt(), dateParts[1].toInt() - 1, dateParts[2].toInt(),
+                                                timeParts[0].toInt(), timeParts[1].toInt(), 0)
+                                        }
+                                    } catch (e: Exception) { /* use current time */ }
+                                }
+                                val dateDialog = DatePickerDialog(requireContext(), { _, y, m, d ->
+                                    TimePickerDialog(requireContext(), { _, h, min ->
+                                        val snappedMin = if (minuteInterval > 1) {
+                                            (Math.round(min.toFloat() / minuteInterval) * minuteInterval) % 60
+                                        } else min
+                                        val dateTimeStr = String.format(Locale.getDefault(), "%04d-%02d-%02d %02d:%02d", y, m + 1, d, h, snappedMin)
+                                        this.text = dateTimeStr
+                                        this.tag = dateTimeStr
+                                    }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show()
+                                }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH))
+                                minDateStr?.let { parseDate(it)?.let { ms -> dateDialog.datePicker.minDate = ms } }
+                                maxDateStr?.let { parseDate(it)?.let { ms -> dateDialog.datePicker.maxDate = ms } }
+                                dateDialog.show()
                             }
                         }
                         layout.addView(btn)
@@ -325,7 +373,7 @@ object SheetFunctions {
                 val view = inputViews[id] ?: continue
                 result[id] = when (type) {
                     "text", "number", "password", "email" -> (view as EditText).text.toString()
-                    "date", "time" -> (view as Button).tag as? String ?: ""
+                    "date", "time", "datetime" -> (view as Button).tag as? String ?: ""
                     "select", "radio" -> {
                         val (spinner, keys) = view as Pair<Spinner, List<String>>
                         keys.getOrNull(spinner.selectedItemPosition)
@@ -338,6 +386,19 @@ object SheetFunctions {
                 }
             }
             return result
+        }
+
+        private fun parseDate(dateStr: String): Long? {
+            return try {
+                val parts = dateStr.split("-")
+                if (parts.size != 3) return null
+                val cal = Calendar.getInstance()
+                cal.set(parts[0].toInt(), parts[1].toInt() - 1, parts[2].toInt(), 0, 0, 0)
+                cal.set(Calendar.MILLISECOND, 0)
+                cal.timeInMillis
+            } catch (e: Exception) {
+                null
+            }
         }
 
         private fun parseOptions(json: JSONObject?): LinkedHashMap<String, String> {
