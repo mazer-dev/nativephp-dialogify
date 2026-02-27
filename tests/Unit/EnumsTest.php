@@ -42,7 +42,7 @@ test('Icon enum has expected cases', function () {
     expect(Icon::Warning->value)->toBe('warning');
     expect(Icon::Error->value)->toBe('error');
     expect(Icon::Info->value)->toBe('info');
-    expect(Icon::Success->value)->toBe('check');
+    expect(Icon::Check->value)->toBe('check');
     expect(Icon::Delete->value)->toBe('delete');
     expect(Icon::Close->value)->toBe('close');
     expect(Icon::QuestionMark->value)->toBe('help');

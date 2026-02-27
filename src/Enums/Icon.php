@@ -8,7 +8,7 @@ enum Icon: string
     case Warning = 'warning';
     case Error = 'error';
     case Info = 'info';
-    case Success = 'check';
+    case Check = 'check';
     case Delete = 'delete';
     case Close = 'close';
     case QuestionMark = 'help';
