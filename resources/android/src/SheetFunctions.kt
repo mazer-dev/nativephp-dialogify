@@ -13,12 +13,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.FragmentActivity
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.nativephp.mobile.bridge.BridgeFunction
 import org.json.JSONArray
 import org.json.JSONObject
-import java.lang.ref.WeakReference
 import java.util.Calendar
 import java.util.Locale
 
@@ -42,14 +42,11 @@ object SheetFunctions {
                 "MazerDev\\Dialogify\\Events\\ButtonPressed"
             }
 
-            // activity is captured strongly here; this is safe because the fragment's lifetime
-            // is bounded to the activity's lifetime. dispatchEvent() uses WeakReference internally.
             Handler(Looper.getMainLooper()).post {
                 try {
                     val fragment = DialogifySheetFragment.newInstance(
                         title, message, buttons, inputs, cancelable, id, event, hasInputs
                     )
-                    fragment.weakActivity = WeakReference(activity)
                     fragment.show(activity.supportFragmentManager, "dialogify_sheet")
                 } catch (e: Exception) {
                     Log.e("Dialogify.Sheet", "Error: ${e.message}", e)
@@ -77,7 +74,6 @@ object SheetFunctions {
     }
 
     class DialogifySheetFragment : BottomSheetDialogFragment() {
-        var weakActivity: WeakReference<FragmentActivity>? = null
         private var title: String? = null
         private var message: String? = null
         private var buttons = listOf<JSONObject>()
@@ -91,22 +87,58 @@ object SheetFunctions {
         private val inputViews = mutableMapOf<String, Any>()
 
         companion object {
+            private const val ARG_TITLE = "title"
+            private const val ARG_MESSAGE = "message"
+            private const val ARG_CANCELABLE = "cancelable"
+            private const val ARG_ID = "id"
+            private const val ARG_EVENT = "event"
+            private const val ARG_HAS_INPUTS = "hasInputs"
+            private const val ARG_BUTTONS = "buttons"
+            private const val ARG_INPUTS = "inputs"
+
             fun newInstance(
                 title: String?, message: String?,
                 buttons: List<JSONObject>, inputs: List<JSONObject>,
                 cancelable: Boolean, id: String?, event: String, hasInputs: Boolean
             ): DialogifySheetFragment {
                 return DialogifySheetFragment().apply {
-                    this.title = title
-                    this.message = message
-                    this.buttons = buttons
-                    this.inputs = inputs
-                    this.sheetCancelable = cancelable
-                    this.dialogId = id
-                    this.event = event
-                    this.hasInputs = hasInputs
+                    arguments = Bundle().apply {
+                        putString(ARG_TITLE, title)
+                        putString(ARG_MESSAGE, message)
+                        putBoolean(ARG_CANCELABLE, cancelable)
+                        putString(ARG_ID, id)
+                        putString(ARG_EVENT, event)
+                        putBoolean(ARG_HAS_INPUTS, hasInputs)
+                        putString(ARG_BUTTONS, JSONArray(buttons.map { it.toString() }).toString())
+                        putString(ARG_INPUTS, JSONArray(inputs.map { it.toString() }).toString())
+                    }
                 }
             }
+        }
+
+        override fun onCreate(savedInstanceState: Bundle?) {
+            super.onCreate(savedInstanceState)
+            arguments?.let { args ->
+                title = args.getString(ARG_TITLE)
+                message = args.getString(ARG_MESSAGE)
+                sheetCancelable = args.getBoolean(ARG_CANCELABLE, true)
+                dialogId = args.getString(ARG_ID)
+                event = args.getString(ARG_EVENT) ?: ""
+                hasInputs = args.getBoolean(ARG_HAS_INPUTS, false)
+                val buttonsJson = args.getString(ARG_BUTTONS) ?: "[]"
+                val inputsJson = args.getString(ARG_INPUTS) ?: "[]"
+                val buttonsArr = JSONArray(buttonsJson)
+                buttons = (0 until buttonsArr.length()).map { buttonsArr.getJSONObject(it) }
+                val inputsArr = JSONArray(inputsJson)
+                inputs = (0 until inputsArr.length()).map { inputsArr.getJSONObject(it) }
+            }
+        }
+
+        override fun onCreateDialog(savedInstanceState: Bundle?): android.app.Dialog {
+            val dialog = super.onCreateDialog(savedInstanceState) as com.google.android.material.bottomsheet.BottomSheetDialog
+            dialog.setCancelable(sheetCancelable)
+            dialog.setCanceledOnTouchOutside(sheetCancelable)
+            return dialog
         }
 
         override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -267,15 +299,11 @@ object SheetFunctions {
                 })
             }
 
-            dialog?.setCancelable(sheetCancelable)
-            dialog?.setCanceledOnTouchOutside(sheetCancelable)
-
-            return ScrollView(requireContext()).apply { addView(layout) }
+            return NestedScrollView(requireContext()).apply { addView(layout) }
         }
 
         override fun onCancel(dialog: android.content.DialogInterface) {
             super.onCancel(dialog)
-            // Fire cancel event if no button was pressed (user dismissed via back press or outside tap)
             if (!buttonPressed) {
                 val payload = JSONObject().apply {
                     put("buttonId", "cancelled")
@@ -283,7 +311,8 @@ object SheetFunctions {
                     put("index", -1)
                     if (dialogId != null) put("dialogId", dialogId)
                 }
-                dispatchEvent(payload.toString())
+                // Cancel always fires ButtonPressed regardless of the dialog's primary event type
+                dispatchEvent(payload.toString(), "MazerDev\\Dialogify\\Events\\ButtonPressed")
             }
         }
 
@@ -326,8 +355,9 @@ object SheetFunctions {
             }
         }
 
-        private fun dispatchEvent(payloadJson: String) {
-            val eventForJs = event.replace("\\", "\\\\")
+        private fun dispatchEvent(payloadJson: String, eventOverride: String? = null) {
+            val eventClass = eventOverride ?: event
+            val eventForJs = eventClass.replace("\\", "\\\\")
             val js = """
                 (function () {
                     const payload = $payloadJson;
@@ -346,7 +376,7 @@ object SheetFunctions {
 
             Handler(Looper.getMainLooper()).post {
                 try {
-                    val act = weakActivity?.get() ?: return@post
+                    val act = activity ?: return@post
                     val webViewProvider = act as? com.nativephp.mobile.bridge.WebViewProvider
                     webViewProvider?.getWebView()?.evaluateJavascript(js, null)
                 } catch (e: Exception) {
