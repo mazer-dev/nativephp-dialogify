@@ -86,6 +86,7 @@ class PendingAlert
         return $this;
     }
 
+    /** @return array{title: string, message: ?string, positive: ?array<string, mixed>, negative: ?array<string, mixed>, neutral: ?array<string, mixed>, icon: ?string, cancelable: bool, inputs: array<int, array<string, mixed>>, id: ?string, event: ?string} */
     public function toPayload(): array
     {
         return [
