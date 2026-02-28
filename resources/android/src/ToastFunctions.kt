@@ -46,10 +46,9 @@ object ToastFunctions {
                 actionId = actionMap["id"] as? String
                 actionColor = actionMap["color"] as? String
             } else if (actionMap is JSONObject) {
-                // Note: optString(key, null) returns null when key is absent (unlike optString(key) which returns "")
-                actionLabel = actionMap.optString("label", null)
-                actionId = actionMap.optString("id", null)
-                actionColor = actionMap.optString("color", null)
+                actionLabel = actionMap.optString("label").ifEmpty { null }
+                actionId = actionMap.optString("id").ifEmpty { null }
+                actionColor = actionMap.optString("color").ifEmpty { null }
             }
 
             val event = "MazerDev\\Dialogify\\Events\\ToastAction"
