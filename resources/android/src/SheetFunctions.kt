@@ -109,8 +109,8 @@ object SheetFunctions {
                         putString(ARG_ID, id)
                         putString(ARG_EVENT, event)
                         putBoolean(ARG_HAS_INPUTS, hasInputs)
-                        putString(ARG_BUTTONS, JSONArray(buttons.map { it.toString() }).toString())
-                        putString(ARG_INPUTS, JSONArray(inputs.map { it.toString() }).toString())
+                        putString(ARG_BUTTONS, JSONArray().also { arr -> buttons.forEach { arr.put(it) } }.toString())
+                        putString(ARG_INPUTS, JSONArray().also { arr -> inputs.forEach { arr.put(it) } }.toString())
                     }
                 }
             }
@@ -178,7 +178,7 @@ object SheetFunctions {
                 val inputId = input.getString("id")
                 val label = input.getString("label")
                 val type = input.optString("type", "text")
-                val placeholder = input.optString("placeholder", null as String?)
+                val placeholder = input.optString("placeholder").takeIf { it.isNotEmpty() }
                 val defaultValue = input.opt("defaultValue")
 
                 layout.addView(TextView(requireContext()).apply {
@@ -206,8 +206,8 @@ object SheetFunctions {
                         inputViews[inputId] = editText
                     }
                     "date" -> {
-                        val minDateStr = input.optString("minDate", null as String?)
-                        val maxDateStr = input.optString("maxDate", null as String?)
+                        val minDateStr = input.optString("minDate").takeIf { it.isNotEmpty() }
+                        val maxDateStr = input.optString("maxDate").takeIf { it.isNotEmpty() }
                         val btn = Button(requireContext()).apply {
                             text = (defaultValue as? String) ?: "Select date"
                             tag = defaultValue as? String
@@ -247,8 +247,8 @@ object SheetFunctions {
                         inputViews[inputId] = btn
                     }
                     "datetime" -> {
-                        val minDateStr = input.optString("minDate", null as String?)
-                        val maxDateStr = input.optString("maxDate", null as String?)
+                        val minDateStr = input.optString("minDate").takeIf { it.isNotEmpty() }
+                        val maxDateStr = input.optString("maxDate").takeIf { it.isNotEmpty() }
                         val minuteInterval = input.optInt("minuteInterval", 0)
                         val btn = Button(requireContext()).apply {
                             text = (defaultValue as? String) ?: "Select date & time"
@@ -325,26 +325,31 @@ object SheetFunctions {
                     layoutParams = lp
 
                     setOnClickListener {
-                        buttonPressed = true
-                        if (hasInputs) {
-                            val values = collectValues()
-                            val payload = JSONObject().apply {
-                                put("buttonId", buttonId)
-                                put("label", buttonLabel)
-                                if (dialogId != null) put("dialogId", dialogId)
-                                put("inputs", JSONObject(values))
+                        try {
+                            buttonPressed = true
+                            if (hasInputs) {
+                                val values = collectValues()
+                                val payload = JSONObject().apply {
+                                    put("buttonId", buttonId)
+                                    put("label", buttonLabel)
+                                    if (dialogId != null) put("dialogId", dialogId)
+                                    put("inputs", JSONObject(values))
+                                }
+                                dispatchEvent(payload.toString())
+                            } else {
+                                val payload = JSONObject().apply {
+                                    put("buttonId", buttonId)
+                                    put("label", buttonLabel)
+                                    put("index", index)
+                                    if (dialogId != null) put("dialogId", dialogId)
+                                }
+                                dispatchEvent(payload.toString())
                             }
-                            dispatchEvent(payload.toString())
-                        } else {
-                            val payload = JSONObject().apply {
-                                put("buttonId", buttonId)
-                                put("label", buttonLabel)
-                                put("index", index)
-                                if (dialogId != null) put("dialogId", dialogId)
-                            }
-                            dispatchEvent(payload.toString())
+                        } catch (e: Exception) {
+                            Log.e("Dialogify.Sheet", "Button click error: ${e.message}", e)
+                        } finally {
+                            try { dismissAllowingStateLoss() } catch (_: Exception) {}
                         }
-                        dismiss()
                     }
                 })
             }
@@ -419,6 +424,15 @@ object SheetFunctions {
         }
 
         private fun dispatchEvent(payloadJson: String, eventOverride: String? = null) {
+            // Capture webview synchronously before the fragment is detached by dismiss().
+            // getWebView() access is wrapped in try-catch because it may throw if the
+            // WebView's lateinit property hasn't been assigned yet in the host activity.
+            val webView = try {
+                (activity as? com.nativephp.mobile.utils.WebViewProvider)?.getWebView()
+            } catch (e: Exception) {
+                Log.e("Dialogify.Sheet", "WebView access error: ${e.message}", e)
+                null
+            } ?: return
             val eventClass = eventOverride ?: event
             val eventForJs = eventClass.replace("\\", "\\\\")
             val js = """
@@ -439,9 +453,7 @@ object SheetFunctions {
 
             Handler(Looper.getMainLooper()).post {
                 try {
-                    val act = activity ?: return@post
-                    val webViewProvider = act as? com.nativephp.mobile.bridge.WebViewProvider
-                    webViewProvider?.getWebView()?.evaluateJavascript(js, null)
+                    webView.evaluateJavascript(js, null)
                 } catch (e: Exception) {
                     Log.e("Dialogify.Sheet", "Event dispatch error: ${e.message}", e)
                 }

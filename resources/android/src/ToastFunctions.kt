@@ -117,7 +117,7 @@ object ToastFunctions {
             Handler(Looper.getMainLooper()).post {
                 try {
                     val act = weakActivity.get() ?: return@post
-                    val webViewProvider = act as? com.nativephp.mobile.bridge.WebViewProvider
+                    val webViewProvider = act as? com.nativephp.mobile.utils.WebViewProvider
                     webViewProvider?.getWebView()?.evaluateJavascript(js, null)
                 } catch (e: Exception) {
                     Log.e("Dialogify.Toast", "Event dispatch error: ${e.message}", e)

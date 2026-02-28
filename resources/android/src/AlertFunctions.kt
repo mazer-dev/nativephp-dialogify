@@ -49,7 +49,7 @@ object AlertFunctions {
                 try {
                     var buttonPressed = false
 
-                    val builder = AlertDialog.Builder(activity)
+                    val builder = AlertDialog.Builder(activity, android.R.style.Theme_Material_Light_Dialog_Alert)
                         .setTitle(title)
                         .setCancelable(cancelable)
 
@@ -64,10 +64,13 @@ object AlertFunctions {
                         if (iconRes != 0) builder.setIcon(iconRes)
                     }
 
-                    // Input fields view
+                    // Input fields view — use a light-themed context so EditText, pickers, etc.
+                    // always render with dark text on white/light backgrounds regardless of the
+                    // host activity's theme.
+                    val themedContext = android.view.ContextThemeWrapper(activity, android.R.style.Theme_Material_Light)
                     val inputViews = mutableMapOf<String, Any>()
                     if (hasInputs) {
-                        val container = LinearLayout(activity).apply {
+                        val container = LinearLayout(themedContext).apply {
                             orientation = LinearLayout.VERTICAL
                             val pad = (24 * resources.displayMetrics.density).toInt()
                             setPadding(pad, (8 * resources.displayMetrics.density).toInt(), pad, 0)
@@ -77,10 +80,10 @@ object AlertFunctions {
                             val inputId = input.getString("id")
                             val label = input.getString("label")
                             val type = input.optString("type", "text")
-                            val placeholder = input.optString("placeholder", null as String?)
+                            val placeholder = input.optString("placeholder").takeIf { it.isNotEmpty() }
                             val defaultValue = input.opt("defaultValue")
 
-                            val labelView = TextView(activity).apply {
+                            val labelView = TextView(themedContext).apply {
                                 text = label
                                 val lp = LinearLayout.LayoutParams(
                                     ViewGroup.LayoutParams.MATCH_PARENT,
@@ -94,7 +97,7 @@ object AlertFunctions {
 
                             when (type) {
                                 "text", "number", "password", "email" -> {
-                                    val editText = EditText(activity).apply {
+                                    val editText = EditText(themedContext).apply {
                                         hint = placeholder
                                         inputType = when (type) {
                                             "number" -> InputType.TYPE_CLASS_NUMBER
@@ -114,13 +117,13 @@ object AlertFunctions {
                                 }
 
                                 "date" -> {
-                                    val minDateStr = input.optString("minDate", null as String?)
-                                    val maxDateStr = input.optString("maxDate", null as String?)
-                                    val dateButton = Button(activity).apply {
+                                    val minDateStr = input.optString("minDate").takeIf { it.isNotEmpty() }
+                                    val maxDateStr = input.optString("maxDate").takeIf { it.isNotEmpty() }
+                                    val dateButton = Button(themedContext).apply {
                                         text = (defaultValue as? String) ?: "Select date"
                                         setOnClickListener {
                                             val cal = Calendar.getInstance()
-                                            val dialog = DatePickerDialog(activity, { _, y, m, d ->
+                                            val dialog = DatePickerDialog(themedContext, { _, y, m, d ->
                                                 val dateStr = String.format(Locale.getDefault(), "%04d-%02d-%02d", y, m + 1, d)
                                                 this.text = dateStr
                                                 this.tag = dateStr
@@ -137,11 +140,11 @@ object AlertFunctions {
 
                                 "time" -> {
                                     val minuteInterval = input.optInt("minuteInterval", 0)
-                                    val timeButton = Button(activity).apply {
+                                    val timeButton = Button(themedContext).apply {
                                         text = (defaultValue as? String) ?: "Select time"
                                         setOnClickListener {
                                             val cal = Calendar.getInstance()
-                                            TimePickerDialog(activity, { _, h, m ->
+                                            TimePickerDialog(themedContext, { _, h, m ->
                                                 val snappedMin = if (minuteInterval > 1) {
                                                     (Math.round(m.toFloat() / minuteInterval) * minuteInterval) % 60
                                                 } else m
@@ -157,10 +160,10 @@ object AlertFunctions {
                                 }
 
                                 "datetime" -> {
-                                    val minDateStr = input.optString("minDate", null as String?)
-                                    val maxDateStr = input.optString("maxDate", null as String?)
+                                    val minDateStr = input.optString("minDate").takeIf { it.isNotEmpty() }
+                                    val maxDateStr = input.optString("maxDate").takeIf { it.isNotEmpty() }
                                     val minuteInterval = input.optInt("minuteInterval", 0)
-                                    val datetimeButton = Button(activity).apply {
+                                    val datetimeButton = Button(themedContext).apply {
                                         text = (defaultValue as? String) ?: "Select date & time"
                                         setOnClickListener {
                                             val cal = Calendar.getInstance()
@@ -178,8 +181,8 @@ object AlertFunctions {
                                                     Log.w("Dialogify", "Could not parse existing datetime value for pre-population: ${e.message}")
                                                 }
                                             }
-                                            val dateDialog = DatePickerDialog(activity, { _, y, m, d ->
-                                                TimePickerDialog(activity, { _, h, min ->
+                                            val dateDialog = DatePickerDialog(themedContext, { _, y, m, d ->
+                                                TimePickerDialog(themedContext, { _, h, min ->
                                                     val snappedMin = if (minuteInterval > 1) {
                                                         (Math.round(min.toFloat() / minuteInterval) * minuteInterval) % 60
                                                     } else min
@@ -200,8 +203,8 @@ object AlertFunctions {
 
                                 "select", "radio" -> {
                                     val options = parseOptions(input.optJSONObject("options"))
-                                    val spinner = Spinner(activity).apply {
-                                        adapter = ArrayAdapter(activity, android.R.layout.simple_spinner_dropdown_item, options.values.toList())
+                                    val spinner = Spinner(themedContext).apply {
+                                        adapter = ArrayAdapter(themedContext, android.R.layout.simple_spinner_dropdown_item, options.values.toList())
                                         if (defaultValue is String) {
                                             val idx = options.keys.indexOf(defaultValue)
                                             if (idx >= 0) setSelection(idx)
@@ -217,7 +220,7 @@ object AlertFunctions {
                                     val checkboxes = mutableMapOf<String, CheckBox>()
 
                                     for ((key, optLabel) in options) {
-                                        val cb = CheckBox(activity).apply {
+                                        val cb = CheckBox(themedContext).apply {
                                             text = optLabel
                                             isChecked = key in defaults
                                         }
@@ -406,7 +409,7 @@ object AlertFunctions {
             Handler(Looper.getMainLooper()).post {
                 try {
                     val act = weakActivity.get() ?: return@post
-                    val webViewProvider = act as? com.nativephp.mobile.bridge.WebViewProvider
+                    val webViewProvider = act as? com.nativephp.mobile.utils.WebViewProvider
                     webViewProvider?.getWebView()?.evaluateJavascript(js, null)
                 } catch (e: Exception) {
                     Log.e("Dialogify.Alert", "Event dispatch error: ${e.message}", e)
