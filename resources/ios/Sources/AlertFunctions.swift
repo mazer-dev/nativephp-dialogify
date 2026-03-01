@@ -144,6 +144,26 @@ enum AlertFunctions {
                 })
             }
 
+            // Handle cancel-dismiss: if cancelable and no explicit cancel-style button exists,
+            // add a hidden cancel action so the dismiss fires the "cancelled" event.
+            // UIAlertController with .alert style can be dismissed by tapping outside on iPad.
+            let hasCancelAction = [positive, negative, neutral].compactMap { $0 }.contains {
+                ($0["style"] as? String) == "cancel"
+            }
+            if cancelable && !hasCancelAction {
+                alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
+                    if !buttonPressed {
+                        var payload: [String: Any] = [
+                            "buttonId": "cancelled",
+                            "label": "Cancelled",
+                            "index": -1,
+                        ]
+                        if let id = id { payload["dialogId"] = id }
+                        LaravelBridge.shared.send?("MazerDev\\Dialogify\\Events\\ButtonPressed", payload)
+                    }
+                })
+            }
+
             root.present(alert, animated: true)
         }
 

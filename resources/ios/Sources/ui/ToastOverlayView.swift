@@ -1,6 +1,15 @@
 // resources/ios/Sources/ui/ToastOverlayView.swift
 import UIKit
 
+/// A passthrough view that only intercepts touches on its subviews (the toast card),
+/// allowing all other touches to pass through to the content beneath.
+private class PassthroughView: UIView {
+    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        let hit = super.hitTest(point, with: event)
+        return hit === self ? nil : hit
+    }
+}
+
 class ToastOverlayView {
     private let message: String
     private let position: String
@@ -41,7 +50,8 @@ class ToastOverlayView {
     }
 
     func show() {
-        DispatchQueue.main.async { [self] in
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
             guard let window = Self.getKeyWindow() else { return }
 
             let margin: CGFloat = 16
@@ -110,10 +120,10 @@ class ToastOverlayView {
                 stack.addArrangedSubview(actionButton)
             }
 
-            // Wrapper for positioning
-            let wrapper = UIView()
+            // Wrapper for positioning — uses PassthroughView so touches outside the card
+            // pass through to the app content beneath
+            let wrapper = PassthroughView()
             wrapper.translatesAutoresizingMaskIntoConstraints = false
-            wrapper.isUserInteractionEnabled = true
             wrapper.addSubview(cardView)
             window.addSubview(wrapper)
 

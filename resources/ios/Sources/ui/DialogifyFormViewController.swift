@@ -191,6 +191,12 @@ class DialogifyFormViewController: UIViewController, UIAdaptivePresentationContr
             if let dv = defaultValue as? String { textField.text = dv }
             if let dv = defaultValue as? NSNumber { textField.text = dv.stringValue }
 
+            // Enforce maxLength via input value truncation at collection time.
+            // Store the maxLength in the tag for later retrieval.
+            if let maxLen = input["maxLength"] as? Int, maxLen > 0 {
+                textField.tag = maxLen
+            }
+
             stack.addArrangedSubview(textField)
             inputViews[inputId] = textField
 
@@ -315,36 +321,41 @@ class DialogifyFormViewController: UIViewController, UIAdaptivePresentationContr
         let btnColor = btn["color"] as? String
         let btnBgColor = btn["backgroundColor"] as? String
 
-        let button = UIButton(type: .system)
-        button.setTitle(btnLabel, for: .normal)
-        button.titleLabel?.font = .boldSystemFont(ofSize: 16)
-        button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
-        button.layer.cornerRadius = 8
-        button.clipsToBounds = true
-
+        var config: UIButton.Configuration
         if let bgHex = btnBgColor {
-            button.backgroundColor = ToastOverlayView.parseColor(bgHex, default: "#007AFF")
-            button.setTitleColor(ToastOverlayView.parseColor(btnColor, default: "#FFFFFF"), for: .normal)
+            config = .filled()
+            config.baseBackgroundColor = ToastOverlayView.parseColor(bgHex, default: "#007AFF")
+            config.baseForegroundColor = ToastOverlayView.parseColor(btnColor, default: "#FFFFFF")
         } else {
             switch btnStyle {
             case "primary":
-                button.backgroundColor = .systemBlue
-                button.setTitleColor(.white, for: .normal)
+                config = .filled()
+                config.baseBackgroundColor = .systemBlue
+                config.baseForegroundColor = .white
             case "destructive":
-                button.backgroundColor = .systemRed
-                button.setTitleColor(.white, for: .normal)
+                config = .filled()
+                config.baseBackgroundColor = .systemRed
+                config.baseForegroundColor = .white
             case "cancel":
-                button.backgroundColor = .systemGray5
-                button.setTitleColor(.label, for: .normal)
+                config = .filled()
+                config.baseBackgroundColor = .systemGray5
+                config.baseForegroundColor = .label
             default:
-                button.backgroundColor = .systemGray5
-                button.setTitleColor(.systemBlue, for: .normal)
+                config = .filled()
+                config.baseBackgroundColor = .systemGray5
+                config.baseForegroundColor = .systemBlue
             }
         }
 
         if let colorHex = btnColor, btnBgColor == nil {
-            button.setTitleColor(ToastOverlayView.parseColor(colorHex, default: "#007AFF"), for: .normal)
+            config.baseForegroundColor = ToastOverlayView.parseColor(colorHex, default: "#007AFF")
         }
+
+        config.title = btnLabel
+        config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16)
+        config.cornerStyle = .medium
+
+        let button = UIButton(configuration: config)
 
         button.addAction(UIAction { [weak self] _ in
             self?.handleButtonPress(btn: btn, index: index)
@@ -395,13 +406,19 @@ class DialogifyFormViewController: UIViewController, UIAdaptivePresentationContr
             switch type {
             case "text", "number", "password", "email":
                 if let tf = view as? UITextField {
-                    result[inputId] = tf.text ?? ""
+                    var text = tf.text ?? ""
+                    // Enforce maxLength (stored in tag)
+                    if tf.tag > 0 && text.count > tf.tag {
+                        text = String(text.prefix(tf.tag))
+                    }
+                    result[inputId] = text
                 }
 
             case "date":
                 if let dp = view as? UIDatePicker {
                     let fmt = DateFormatter()
                     fmt.dateFormat = "yyyy-MM-dd"
+                    fmt.locale = Locale(identifier: "en_US_POSIX")
                     result[inputId] = fmt.string(from: dp.date)
                 }
 
@@ -409,6 +426,7 @@ class DialogifyFormViewController: UIViewController, UIAdaptivePresentationContr
                 if let dp = view as? UIDatePicker {
                     let fmt = DateFormatter()
                     fmt.dateFormat = "HH:mm"
+                    fmt.locale = Locale(identifier: "en_US_POSIX")
                     result[inputId] = fmt.string(from: dp.date)
                 }
 
@@ -416,6 +434,7 @@ class DialogifyFormViewController: UIViewController, UIAdaptivePresentationContr
                 if let dp = view as? UIDatePicker {
                     let fmt = DateFormatter()
                     fmt.dateFormat = "yyyy-MM-dd HH:mm"
+                    fmt.locale = Locale(identifier: "en_US_POSIX")
                     result[inputId] = fmt.string(from: dp.date)
                 }
 
@@ -473,12 +492,14 @@ class DialogifyFormViewController: UIViewController, UIAdaptivePresentationContr
     static func parseDate(_ str: String) -> Date? {
         let fmt = DateFormatter()
         fmt.dateFormat = "yyyy-MM-dd"
+        fmt.locale = Locale(identifier: "en_US_POSIX")
         return fmt.date(from: str)
     }
 
     static func parseDateTime(_ str: String) -> Date? {
         let fmt = DateFormatter()
         fmt.dateFormat = "yyyy-MM-dd HH:mm"
+        fmt.locale = Locale(identifier: "en_US_POSIX")
         return fmt.date(from: str)
     }
 
