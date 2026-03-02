@@ -1,0 +1,75 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - php: '8.2'
+            livewire: '^3.0'
+            testbench: '^9.0'
+            label: 'PHP 8.2 / Livewire 3'
+          - php: '8.3'
+            livewire: '^3.0'
+            testbench: '^10.0'
+            label: 'PHP 8.3 / Livewire 3'
+          - php: '8.3'
+            livewire: '^4.0'
+            testbench: '^10.0'
+            label: 'PHP 8.3 / Livewire 4'
+          - php: '8.4'
+            livewire: '^4.0'
+            testbench: '^10.0'
+            label: 'PHP 8.4 / Livewire 4'
+
+    name: ${{ matrix.label }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP ${{ matrix.php }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mbstring, xml, sqlite3
+          coverage: none
+
+      - name: Set dependency versions
+        run: |
+          composer require "orchestra/testbench:${{ matrix.testbench }}" --dev --no-update --no-interaction
+          composer require "livewire/livewire:${{ matrix.livewire }}" --dev --no-update --no-interaction
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Run tests
+        run: vendor/bin/pest --no-interaction
+
+  pint:
+    runs-on: ubuntu-latest
+    name: Code Style
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, xml, sqlite3
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Run Pint
+        run: vendor/bin/pint --test
