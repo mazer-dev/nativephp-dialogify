@@ -1,10 +1,10 @@
 <?php
 
-use MazerDev\Dialogify\Enums\Position;
-use MazerDev\Dialogify\Enums\Duration;
 use MazerDev\Dialogify\Enums\ButtonStyle;
-use MazerDev\Dialogify\Enums\InputType;
+use MazerDev\Dialogify\Enums\Duration;
 use MazerDev\Dialogify\Enums\Icon;
+use MazerDev\Dialogify\Enums\InputType;
+use MazerDev\Dialogify\Enums\Position;
 
 test('Position enum has expected cases', function () {
     expect(Position::Top->value)->toBe('top');
