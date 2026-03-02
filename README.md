@@ -30,6 +30,17 @@ Each license covers a single major version (e.g., all v1.x releases including mi
 - Android min SDK 24
 - iOS >= 15.0
 
+## Compatibility
+
+Dialogify works with all NativePHP-supported frontend stacks:
+
+| Stack | Status | Notes |
+|---|---|---|
+| Livewire v3 | Tested | Full support via `#[OnNative]` event attributes |
+| Livewire v4 | Tested | Full support via `#[OnNative]` event attributes |
+| Inertia + Vue | Supported | Use bridge calls from JavaScript (see [JavaScript Usage](#javascript-usage)) |
+| Inertia + React | Supported | Use bridge calls from JavaScript (see [JavaScript Usage](#javascript-usage)) |
+
 ## Installation
 
 Add the Anystack repository to your `composer.json`:
@@ -55,7 +66,7 @@ Install:
 composer require mazer-dev/nativephp-dialogify
 ```
 
-The service provider auto-registers via Laravel package discovery.
+The service provider auto-registers via Laravel package discovery — no manual registration needed.
 
 ## Usage
 
@@ -168,7 +179,7 @@ Dialogify::alert('Confirm', 'Proceed?', [
 
 ## Event Handling
 
-Dialogify dispatches Laravel events when users interact with dialogs.
+Dialogify dispatches Laravel events when users interact with dialogs. All events use `Dispatchable` and `SerializesModels` traits.
 
 ### ButtonPressed
 
@@ -177,11 +188,13 @@ Fired when a button is pressed on an Alert or Sheet.
 ```php
 use MazerDev\Dialogify\Events\ButtonPressed;
 
-// Properties:
-// - string $buttonId   — The button's ID
-// - string $label      — The button's label text
-// - int    $index      — The button's position index
-// - ?string $dialogId  — The dialog's ID (if set)
+// Constructor signature:
+// public function __construct(
+//     public string  $buttonId,   // The button's ID
+//     public string  $label,      // The button's label text
+//     public int     $index,      // The button's position index
+//     public ?string $dialogId,   // The dialog's ID (if set)
+// )
 ```
 
 ### ToastAction
@@ -191,10 +204,12 @@ Fired when a toast's action button is tapped.
 ```php
 use MazerDev\Dialogify\Events\ToastAction;
 
-// Properties:
-// - string  $buttonId — The action button's ID
-// - string  $label    — The action button's label
-// - ?string $toastId  — The toast's ID (if set)
+// Constructor signature:
+// public function __construct(
+//     public string  $buttonId,  // The action button's ID
+//     public string  $label,     // The action button's label
+//     public ?string $toastId,   // The toast's ID (if set)
+// )
 ```
 
 ### InputSubmitted
@@ -204,16 +219,18 @@ Fired when a dialog with inputs is submitted.
 ```php
 use MazerDev\Dialogify\Events\InputSubmitted;
 
-// Properties:
-// - string  $buttonId — The button that triggered submission
-// - string  $label    — The button's label
-// - ?string $dialogId — The dialog's ID (if set)
-// - array   $inputs   — Key-value pairs of input ID => submitted value
+// Constructor signature:
+// public function __construct(
+//     public string  $buttonId,   // The button that triggered submission
+//     public string  $label,      // The button's label
+//     public ?string $dialogId,   // The dialog's ID (if set)
+//     public array   $inputs,     // Key-value pairs: input ID => submitted value
+// )
 ```
 
 ### Listening to Events
 
-**With Livewire and `#[OnNative]`:**
+**With Livewire and `#[OnNative]` (recommended):**
 
 ```php
 use NativePHP\Attributes\OnNative;
@@ -249,25 +266,86 @@ Event::listen(ToastAction::class, function (ToastAction $event) {
 });
 ```
 
+**With a custom event class:**
+
+You can use the `->event()` method on alerts and sheets to dispatch your own event class instead of the defaults:
+
+```php
+// In your dialog setup
+Dialogify::alert('Edit Profile')
+    ->addInput(Input::make('name', 'Name'))
+    ->positive(Button::make('save', 'Save')->primary())
+    ->event(ProfileUpdated::class)
+    ->show();
+
+// Your custom event class receives the same payload
+```
+
 ## JavaScript Usage
 
-Dialogify is a PHP-first plugin. For SPA frameworks (Inertia + Vue/React), you can call bridge functions directly:
+Dialogify is a PHP-first plugin. The primary API is the PHP Facade, and all events flow back through Laravel's event system.
+
+For **SPA frameworks** (Inertia + Vue/React), you can call bridge functions directly via the NativePHP JavaScript bridge:
+
+### Bridge Function Calls
 
 ```js
+// Toast
 window.__nativephp.bridgeCall('Dialogify.Toast', JSON.stringify({
     message: 'Hello from JS',
     position: 'bottom',
     duration: 'long',
+    backgroundColor: '#1a1a2e',
+    textColor: '#ffffff',
+    icon: 'check_circle',
+    cornerRadius: 12,
+    id: 'js-toast',
+    action: { id: 'undo', label: 'Undo' },
 }));
 
+// Alert
 window.__nativephp.bridgeCall('Dialogify.Alert', JSON.stringify({
     title: 'Confirm',
     message: 'Are you sure?',
     positive: { id: 'yes', label: 'Yes', style: 'primary' },
     negative: { id: 'no', label: 'No', style: 'cancel' },
     cancelable: true,
+    icon: 'warning',
+    id: 'confirm-alert',
+}));
+
+// Sheet
+window.__nativephp.bridgeCall('Dialogify.Sheet', JSON.stringify({
+    title: 'Actions',
+    message: 'Choose an option',
+    buttons: [
+        { id: 'edit', label: 'Edit', style: 'primary' },
+        { id: 'delete', label: 'Delete', style: 'destructive' },
+    ],
+    cancelable: true,
+    id: 'action-sheet',
 }));
 ```
+
+### Listening for Events in JavaScript
+
+Native events are dispatched to the DOM as `CustomEvent` objects:
+
+```js
+document.addEventListener('native-event', (e) => {
+    const { event, payload } = e.detail;
+
+    if (event === 'MazerDev\\Dialogify\\Events\\ButtonPressed') {
+        console.log('Button pressed:', payload.buttonId);
+    }
+
+    if (event === 'MazerDev\\Dialogify\\Events\\InputSubmitted') {
+        console.log('Inputs:', payload.inputs);
+    }
+});
+```
+
+If Livewire is loaded, events are also dispatched via `window.Livewire.dispatch()`.
 
 ## API Reference
 
@@ -287,7 +365,7 @@ window.__nativephp.bridgeCall('Dialogify.Alert', JSON.stringify({
 | `backgroundColor()` | `string $hex` | Set background color |
 | `textColor()` | `string $hex` | Set text color |
 | `icon()` | `Icon\|string` | Set icon |
-| `duration()` | `Duration\|int` | Set display duration |
+| `duration()` | `Duration\|int` | Set display duration (enum or milliseconds) |
 | `cornerRadius()` | `int $dp` | Set corner radius in dp |
 | `action()` | `Button` | Set action button |
 | `id()` | `string` | Set toast identifier |
@@ -351,7 +429,7 @@ Input::make(string $id, string $label)
 
 **Position:** `Top`, `Bottom`, `Center`
 
-**Duration:** `Short`, `Long`
+**Duration:** `Short` (2s), `Long` (3.5s) — or pass an `int` for custom milliseconds
 
 **ButtonStyle:** `Primary`, `Destructive`, `Neutral`, `Cancel`
 
@@ -359,16 +437,42 @@ Input::make(string $id, string $label)
 
 **Icon:** `CheckCircle`, `Warning`, `Error`, `Info`, `Check`, `Delete`, `Close`, `QuestionMark`
 
+Icons map to Material Icons (Android) and SF Symbols (iOS) automatically.
+
+### Events
+
+| Event | Properties | Dispatched When |
+|---|---|---|
+| `ButtonPressed` | `buttonId`, `label`, `index`, `dialogId` | Alert/Sheet button pressed |
+| `ToastAction` | `buttonId`, `label`, `toastId` | Toast action button tapped |
+| `InputSubmitted` | `buttonId`, `label`, `dialogId`, `inputs` | Form dialog submitted |
+
+### Bridge Functions
+
+These are the raw bridge function names registered in `nativephp.json`, used for JavaScript calls:
+
+| Bridge Function | Description |
+|---|---|
+| `Dialogify.Toast` | Show a customizable toast notification |
+| `Dialogify.Alert` | Show a customizable alert dialog |
+| `Dialogify.Sheet` | Show a customizable bottom sheet |
+
 ## Platform Support
 
-| Platform | Status |
-|---|---|
-| Android (Kotlin) | Fully implemented |
-| iOS (Swift) | Fully implemented |
+| Platform | Implementation | Native Framework | Status |
+|---|---|---|---|
+| Android | Kotlin | Material Design Components | Fully implemented |
+| iOS | Swift | UIKit | Fully implemented |
 
-No special permissions required.
+### Android Details
+- Min SDK: 24 (Android 7.0)
+- Dependency: `com.google.android.material:material:1.12.0` (added automatically via `nativephp.json`)
+- Icons: Material Icons
 
-**Android dependency:** `com.google.android.material:material:1.12.0` (added automatically)
+### iOS Details
+- Min version: iOS 15.0
+- No external dependencies (uses UIKit and SF Symbols)
+- Icons: SF Symbols
 
 ## Test App
 
@@ -379,11 +483,25 @@ A demo app showcasing all Dialogify features is available for testing:
 
 ## Testing
 
+Run the test suite:
+
 ```bash
 composer test
 # or
 vendor/bin/pest
 ```
+
+Tests cover facade methods, builder serialization, event dispatching, and input validation.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for a detailed version history.
+
+## Upgrading
+
+Dialogify follows [Semantic Versioning](https://semver.org/). Within a major version (e.g., all 1.x releases), there are no breaking changes — only new features and bug fixes. Your license covers all updates within the purchased major version.
+
+When a new major version is released, a dedicated upgrade guide will be published.
 
 ## Roadmap
 
@@ -391,9 +509,9 @@ Dialogify is actively evolving. Upcoming v1.x releases will introduce new capabi
 
 ## Support
 
+- **Email:** support@mazer.dev
 - **GitHub Discussions:** [Ask questions or share feedback](https://github.com/mazer-dev/nativephp-dialogify/discussions)
 - **GitHub Issues:** [Report bugs](https://github.com/mazer-dev/nativephp-dialogify/issues)
-- **Email:** support@mazer.dev
 
 ## License
 
