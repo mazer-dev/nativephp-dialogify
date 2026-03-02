@@ -1,9 +1,15 @@
 # Dialogify for NativePHP Mobile
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/mazer-dev/nativephp-dialogify.svg)](https://packagist.org/packages/mazer-dev/nativephp-dialogify)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Latest Version](https://img.shields.io/packagist/v/mazer-dev/nativephp-dialogify.svg)](https://packagist.org/packages/mazer-dev/nativephp-dialogify)
+[![License: Proprietary](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
 
 Highly customizable toast notifications, alert dialogs, and bottom sheets for NativePHP Mobile. Renders natively on Android (Kotlin) and iOS (Swift).
+
+## Purchase
+
+**[Buy a license](#)** to get started.
+
+Each license covers a single major version (e.g., all v1.x releases). Upgrade pricing is available for existing customers when new major versions are released.
 
 ## Features
 
@@ -23,6 +29,25 @@ Highly customizable toast notifications, alert dialogs, and bottom sheets for Na
 - iOS >= 15.0
 
 ## Installation
+
+Add the Anystack repository to your `composer.json`:
+
+```json
+"repositories": [
+    {
+        "type": "composer",
+        "url": "https://satis.anystack.sh"
+    }
+]
+```
+
+Configure your license key:
+
+```bash
+composer config http-basic.satis.anystack.sh your-license-key ""
+```
+
+Install:
 
 ```bash
 composer require mazer-dev/nativephp-dialogify
@@ -377,4 +402,7 @@ Planned features for upcoming releases:
 
 ## License
 
-MIT License. See [LICENSE](LICENSE) for details.
+Proprietary License. See [LICENSE](LICENSE) for details.
+
+This is a commercial product. Each license grants usage rights for a specific
+major version. Redistribution is not permitted.

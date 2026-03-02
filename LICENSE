@@ -1,21 +1,64 @@
-MIT License
+Proprietary License
 
-Copyright (c) 2026 Mazer Dev
+Copyright (c) 2026 Mazer Dev. All rights reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+This software and associated documentation files (the "Software") are the
+proprietary property of Mazer Dev. The Software is licensed, not sold.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. GRANT OF LICENSE
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+   Upon purchase of a valid license, the licensee is granted a non-exclusive,
+   non-transferable right to:
+
+   a. Install and use the Software in projects owned or operated by the licensee.
+   b. Modify the Software for the licensee's own use within licensed projects.
+
+2. RESTRICTIONS
+
+   The licensee SHALL NOT:
+
+   a. Redistribute, sublicense, sell, lease, or otherwise transfer the Software
+      or any portion thereof to any third party.
+   b. Share, publish, or make available the source code or compiled versions
+      of the Software in any public or private repository, package registry,
+      or distribution channel.
+   c. Remove or alter any proprietary notices, labels, or marks in the Software.
+   d. Use the Software in projects not covered by a valid license.
+
+3. VERSION SCOPE
+
+   Each license grants access to a specific major version of the Software
+   (e.g., v1.x). Access to subsequent major versions (e.g., v2.x) requires
+   a separate license or upgrade purchase.
+
+4. UPDATES
+
+   Minor and patch updates within the licensed major version are included at
+   no additional cost for the duration of the license.
+
+5. SUPPORT
+
+   Support is provided through the official channels listed in the documentation.
+   Response times and support scope may vary.
+
+6. DISCLAIMER OF WARRANTIES
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+
+7. LIMITATION OF LIABILITY
+
+   IN NO EVENT SHALL MAZER DEV BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+
+8. TERMINATION
+
+   This license is effective until terminated. It will terminate automatically
+   if the licensee fails to comply with any of the terms and conditions.
+   Upon termination, the licensee must cease all use and destroy all copies
+   of the Software.
+
+For licensing inquiries: support@mazer.dev

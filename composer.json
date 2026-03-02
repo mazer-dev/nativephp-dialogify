@@ -2,7 +2,7 @@
     "name": "mazer-dev/nativephp-dialogify",
     "description": "Highly customizable toast notifications, alert dialogs, and bottom sheets for NativePHP Mobile",
     "type": "nativephp-plugin",
-    "license": "MIT",
+    "license": "proprietary",
     "require": {
         "php": "^8.2",
         "nativephp/mobile": "^3.0"
