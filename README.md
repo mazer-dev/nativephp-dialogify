@@ -3,13 +3,15 @@
 [![Latest Version](https://img.shields.io/packagist/v/mazer-dev/nativephp-dialogify.svg)](https://packagist.org/packages/mazer-dev/nativephp-dialogify)
 [![License: Proprietary](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
 
-Highly customizable toast notifications, alert dialogs, and bottom sheets for NativePHP Mobile. Renders natively on Android (Kotlin) and iOS (Swift).
+Native dialogs, fully featured.
+
+A complete native communication hub for your NativePHP Mobile app — toast notifications, alert dialogs, and bottom sheets with rich form inputs, custom styling, and event-driven responses. Crafted in Kotlin and Swift for a truly fluid user experience.
 
 ## Purchase
 
 **[Buy a license](#)** to get started.
 
-Each license covers a single major version (e.g., all v1.x releases). Upgrade pricing is available for existing customers when new major versions are released.
+Each license covers a single major version (e.g., all v1.x releases including minor and patch updates). Existing customers get exclusive upgrade discounts when new major versions are released.
 
 ## Features
 
@@ -385,14 +387,7 @@ vendor/bin/pest
 
 ## Roadmap
 
-Planned features for upcoming releases:
-
-- **v1.1** — Toast countdown timer
-- **v1.2** — Alert countdown timer
-- **v1.3** — Sheet countdown timer
-- **v1.4** — Progress indicators
-- **v1.5** — Overlay dialogs
-- **v1.6** — Extended icon support
+Dialogify is actively evolving. Upcoming v1.x releases will introduce new capabilities — including countdown timers, progress indicators, and more. All future v1.x updates are included with your license at no extra cost.
 
 ## Support
 
