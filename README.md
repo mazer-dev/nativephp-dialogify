@@ -5,23 +5,42 @@
 
 Native dialogs, fully featured.
 
-A complete native communication hub for your NativePHP Mobile app — toast notifications, alert dialogs, and bottom sheets with rich form inputs, custom styling, and event-driven responses. Crafted in Kotlin and Swift for a truly fluid user experience.
+A complete native communication hub for your NativePHP Mobile app -- toast notifications, alert dialogs, and bottom sheets with rich form inputs, custom styling, and event-driven responses. Crafted in Kotlin and Swift for a truly fluid user experience.
 
-## Purchase
+---
 
-**[Buy a license](#)** to get started.
+## Table of Contents
 
-Each license covers a single major version (e.g., all v1.x releases including minor and patch updates). Existing customers get exclusive upgrade discounts when new major versions are released.
+- [Features](#features)
+- [Requirements](#requirements)
+- [Compatibility](#compatibility)
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Toast](#toast)
+  - [Alert](#alert)
+  - [Sheet](#sheet)
+  - [Options Array (Alternative Syntax)](#options-array-alternative-syntax)
+- [Event Handling](#event-handling)
+- [JavaScript Usage](#javascript-usage)
+- [API Reference](#api-reference)
+- [Platform Support](#platform-support)
+- [Testing](#testing)
+- [Upgrading](#upgrading)
+- [Roadmap](#roadmap)
+- [Support](#support)
+- [License](#license)
+
+---
 
 ## Features
 
-- **Toast Notifications** — Position, colors, icons, duration, corner radius, action button
-- **Alert Dialogs** — Title, message, up to 3 buttons (positive/negative/neutral), form inputs, icons
-- **Bottom Sheets** — Unlimited buttons, form inputs, cancelable
-- **Form Inputs** — Text, number, password, email, date, time, datetime, select, checkbox, radio
-- **Fluent PHP API** — Chain methods, auto-show on destruct
-- **Event-driven** — `ButtonPressed`, `ToastAction`, `InputSubmitted` events with full payload
-- **Custom styling** — Colors, icons, button styles (primary, destructive, neutral, cancel)
+- **Toast Notifications** -- Position, colors, icons, duration, corner radius, action button
+- **Alert Dialogs** -- Title, message, up to 3 buttons (positive/negative/neutral), form inputs, icons
+- **Bottom Sheets** -- Unlimited buttons, form inputs, cancelable
+- **Form Inputs** -- Text, number, password, email, date, time, datetime, select, checkbox, radio
+- **Fluent PHP API** -- Chain methods, auto-show on destruct
+- **Event-driven** -- `ButtonPressed`, `ToastAction`, `InputSubmitted` events with full payload
+- **Custom styling** -- Colors, icons, button styles (primary, destructive, neutral, cancel)
 
 ## Requirements
 
@@ -41,32 +60,59 @@ Dialogify works with all NativePHP-supported frontend stacks:
 | Inertia + Vue | Supported | Use bridge calls from JavaScript (see [JavaScript Usage](#javascript-usage)) |
 | Inertia + React | Supported | Use bridge calls from JavaScript (see [JavaScript Usage](#javascript-usage)) |
 
+---
+
 ## Installation
 
-Add the Anystack repository to your `composer.json`:
+### 1. Add the package repository
+
+Add the following repository entry to your project's `composer.json`:
 
 ```json
 "repositories": [
     {
-        "type": "composer",
-        "url": "https://satis.anystack.sh"
+        "type": "vcs",
+        "url": "https://github.com/mazer-dev/nativephp-dialogify-v1.git"
     }
 ]
 ```
 
-Configure your license key:
+### 2. Configure GitHub authentication
+
+After purchasing a license, you will receive a GitHub personal access token. Configure Composer to use it:
 
 ```bash
-composer config http-basic.satis.anystack.sh your-license-key ""
+composer config --global github-oauth.github.com YOUR_TOKEN_HERE
 ```
 
-Install:
+### 3. Install the package
 
 ```bash
 composer require mazer-dev/nativephp-dialogify
 ```
 
-The service provider auto-registers via Laravel package discovery — no manual registration needed.
+### 4. Register the service provider
+
+Add the Dialogify service provider to your `NativeAppServiceProvider`'s `plugins()` method:
+
+```php
+public function plugins(): array
+{
+    return [
+        \MazerDev\Dialogify\Providers\DialogifyServiceProvider::class,
+    ];
+}
+```
+
+### 5. Compile native builds
+
+Run the NativePHP install command to compile the plugin into your native builds:
+
+```bash
+php artisan native:install
+```
+
+---
 
 ## Usage
 
@@ -79,7 +125,7 @@ use MazerDev\Dialogify\Enums\Duration;
 use MazerDev\Dialogify\Enums\Icon;
 use MazerDev\Dialogify\Button;
 
-// Simple toast — auto-shows when variable goes out of scope
+// Simple toast -- auto-shows when variable goes out of scope
 Dialogify::toast('Record saved!');
 
 // Customized toast
@@ -177,6 +223,8 @@ Dialogify::alert('Confirm', 'Proceed?', [
 ]);
 ```
 
+---
+
 ## Event Handling
 
 Dialogify dispatches Laravel events when users interact with dialogs. All events use `Dispatchable` and `SerializesModels` traits.
@@ -268,7 +316,7 @@ Event::listen(ToastAction::class, function (ToastAction $event) {
 
 **With a custom event class:**
 
-You can use the `->event()` method on alerts and sheets to dispatch your own event class instead of the defaults:
+Use the `->event()` method on alerts and sheets to dispatch your own event class instead of the defaults:
 
 ```php
 // In your dialog setup
@@ -281,11 +329,13 @@ Dialogify::alert('Edit Profile')
 // Your custom event class receives the same payload
 ```
 
+---
+
 ## JavaScript Usage
 
 Dialogify is a PHP-first plugin. The primary API is the PHP Facade, and all events flow back through Laravel's event system.
 
-For **SPA frameworks** (Inertia + Vue/React), you can call bridge functions directly via the NativePHP JavaScript bridge:
+For **SPA frameworks** (Inertia + Vue/React), you can call bridge functions directly via the NativePHP JavaScript bridge.
 
 ### Bridge Function Calls
 
@@ -347,6 +397,8 @@ document.addEventListener('native-event', (e) => {
 
 If Livewire is loaded, events are also dispatched via `window.Livewire.dispatch()`.
 
+---
+
 ## API Reference
 
 ### Facade Methods
@@ -369,7 +421,7 @@ If Livewire is loaded, events are also dispatched via `window.Livewire.dispatch(
 | `cornerRadius()` | `int $dp` | Set corner radius in dp |
 | `action()` | `Button` | Set action button |
 | `id()` | `string` | Set toast identifier |
-| `show()` | — | Display the toast immediately |
+| `show()` | -- | Display the toast immediately |
 
 ### PendingAlert
 
@@ -383,7 +435,7 @@ If Livewire is loaded, events are also dispatched via `window.Livewire.dispatch(
 | `addInput()` | `Input` | Add a form input field |
 | `id()` | `string` | Set dialog identifier |
 | `event()` | `string $eventClass` | Set custom event class for responses |
-| `show()` | — | Display the alert immediately |
+| `show()` | -- | Display the alert immediately |
 
 ### PendingSheet
 
@@ -395,7 +447,7 @@ If Livewire is loaded, events are also dispatched via `window.Livewire.dispatch(
 | `cancelable()` | `bool` | Allow dismissing by swiping down (default: true) |
 | `id()` | `string` | Set sheet identifier |
 | `event()` | `string $eventClass` | Set custom event class for responses |
-| `show()` | — | Display the sheet immediately |
+| `show()` | -- | Display the sheet immediately |
 
 ### Button
 
@@ -429,7 +481,7 @@ Input::make(string $id, string $label)
 
 **Position:** `Top`, `Bottom`, `Center`
 
-**Duration:** `Short` (2s), `Long` (3.5s) — or pass an `int` for custom milliseconds
+**Duration:** `Short` (2s), `Long` (3.5s) -- or pass an `int` for custom milliseconds
 
 **ButtonStyle:** `Primary`, `Destructive`, `Neutral`, `Cancel`
 
@@ -457,6 +509,8 @@ These are the raw bridge function names registered in `nativephp.json`, used for
 | `Dialogify.Alert` | Show a customizable alert dialog |
 | `Dialogify.Sheet` | Show a customizable bottom sheet |
 
+---
+
 ## Platform Support
 
 | Platform | Implementation | Native Framework | Status |
@@ -474,12 +528,7 @@ These are the raw bridge function names registered in `nativephp.json`, used for
 - No external dependencies (uses UIKit and SF Symbols)
 - Icons: SF Symbols
 
-## Test App
-
-A demo app showcasing all Dialogify features is available for testing:
-
-- **iOS (TestFlight):** [Coming soon](#)
-- **Android (Google Play Testing):** [Coming soon](#)
+---
 
 ## Testing
 
@@ -493,29 +542,31 @@ vendor/bin/pest
 
 Tests cover facade methods, builder serialization, event dispatching, and input validation.
 
-## Changelog
-
-See [CHANGELOG.md](CHANGELOG.md) for a detailed version history.
+---
 
 ## Upgrading
 
-Dialogify follows [Semantic Versioning](https://semver.org/). Within a major version (e.g., all 1.x releases), there are no breaking changes — only new features and bug fixes. Your license covers all updates within the purchased major version.
+Dialogify follows [Semantic Versioning](https://semver.org/). Within a major version (e.g., all 1.x releases), there are no breaking changes -- only new features and bug fixes. Your license covers all updates within the purchased major version.
 
 When a new major version is released, a dedicated upgrade guide will be published.
 
 ## Roadmap
 
-Dialogify is actively evolving. Upcoming v1.x releases will introduce new capabilities — including countdown timers, progress indicators, and more. All future v1.x updates are included with your license at no extra cost.
+Dialogify is actively evolving. Upcoming v1.x releases will introduce new capabilities -- including countdown timers, progress indicators, and more. All future v1.x updates are included with your license at no extra cost.
+
+---
 
 ## Support
 
+For questions, bug reports, or feature requests:
+
 - **Email:** support@mazer.dev
-- **GitHub Discussions:** [Ask questions or share feedback](https://github.com/mazer-dev/nativephp-dialogify/discussions)
 - **GitHub Issues:** [Report bugs](https://github.com/mazer-dev/nativephp-dialogify/issues)
+
+---
 
 ## License
 
-Proprietary License. See [LICENSE](LICENSE) for details.
+Dialogify is a commercial package distributed under a proprietary license. Each license grants usage rights for **one project** per major version. Redistribution, sublicensing, and sharing of access tokens are not permitted.
 
-This is a commercial product. Each license grants usage rights for a specific
-major version. Redistribution is not permitted.
+See [LICENSE](LICENSE) for the full license terms.
