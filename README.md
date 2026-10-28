@@ -45,7 +45,7 @@ A complete native communication hub for your NativePHP Mobile app -- toast notif
 ## Requirements
 
 - PHP >= 8.2
-- NativePHP Mobile ^3.0
+- NativePHP Mobile ^3.3.11 or ^4.6.1
 - Android min SDK 24
 - iOS >= 15.0
 
@@ -328,6 +328,24 @@ Dialogify::alert('Edit Profile')
 
 // Your custom event class receives the same payload
 ```
+
+The custom event class must implement `Native\Mobile\Events\Contracts\DispatchableFromNative`. Since NativePHP Mobile 3.3.11 and 4.6.1, the `/_native/api/events` endpoint refuses any class without this marker ([GHSA-83jv-8h7x-287p](https://github.com/NativePHP/mobile-air/security/advisories/GHSA-83jv-8h7x-287p)), so Laravel listeners registered with `Event::listen` never receive it. Livewire `#[OnNative]` handlers still receive the event, because the web view dispatches it to Livewire directly.
+
+```php
+use Native\Mobile\Events\Contracts\DispatchableFromNative;
+
+class ProfileUpdated implements DispatchableFromNative
+{
+    public function __construct(
+        public string $buttonId,
+        public string $label,
+        public ?string $dialogId = null,
+        public array $inputs = [],
+    ) {}
+}
+```
+
+The built-in `ButtonPressed`, `ToastAction` and `InputSubmitted` events already implement the marker.
 
 ---
 
