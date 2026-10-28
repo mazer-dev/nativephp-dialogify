@@ -5,7 +5,7 @@
     "license": "proprietary",
     "require": {
         "php": "^8.3",
-        "nativephp/mobile": "^3.0"
+        "nativephp/mobile": "^3.3.11|^4.6.1"
     },
     "require-dev": {
         "laravel/pint": "^1.27",

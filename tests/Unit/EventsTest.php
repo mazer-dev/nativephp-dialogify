@@ -3,6 +3,7 @@
 use MazerDev\Dialogify\Events\ButtonPressed;
 use MazerDev\Dialogify\Events\InputSubmitted;
 use MazerDev\Dialogify\Events\ToastAction;
+use Native\Mobile\Events\Contracts\DispatchableFromNative;
 
 test('ButtonPressed event stores properties', function () {
     $event = new ButtonPressed(
@@ -55,3 +56,7 @@ test('InputSubmitted inputs defaults to empty array', function () {
 
     expect($event->inputs)->toBe([]);
 });
+
+test('events can be dispatched from native', function (string $event) {
+    expect(is_subclass_of($event, DispatchableFromNative::class))->toBeTrue();
+})->with([ButtonPressed::class, ToastAction::class, InputSubmitted::class]);
